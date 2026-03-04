@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>茶言觀色 - 年輕客群戰略雷達</title>
+    <style>
+        :root {
+            --primary-color: #6B8E23; /* 抹茶綠 */
+            --secondary-color: #F5F5DC; /* 米色 */
+            --text-color: #333;
+            --accent-color: #E76F51; /* 警示紅 */
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin: 0;
+        }
+
+        p.subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box; /* 確保padding不撐大寬度 */
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #result-area {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            display: none; /* 預設隱藏 */
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-card h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 10px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: white;
+            font-size: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .tag-strategy { background-color: var(--primary-color); }
+        .tag-risk-high { background-color: var(--accent-color); }
+        .tag-risk-low { background-color: #2A9D8F; }
+
+        .analysis-item {
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .recommendation {
+            background-color: #e8f5e9;
+            padding: 10px;
+            border-left: 4px solid var(--primary-color);
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>茶言觀色</h1>
+            <p class="subtitle">策略部 - 年輕客群戰略雷達</p>
+        </header>
+
+        <div class="input-section">
+            <div class="form-group">
+                <label for="age">顧客年齡 (Age)</label>
+                <input type="number" id="age" placeholder="例如：22">
+            </div>
+            <div class="form-group">
+                <label for="visits">每月到店次數 (Monthly Visits)</label>
+                <input type="number" id="visits" placeholder="例如：8">
+            </div>
+            <div class="form-group">
+                <label for="last-visit">距上次到店天數 (Days since last visit)</label>
+                <input type="number" id="last-visit" placeholder="例如：15">
+            </div>
+            <button onclick="analyzeCustomer()">生成策略建議</button>
+        </div>
+
+        <div id="result-area" class="result-card">
+            <h3>分析結果</h3>
+            <div id="tags-container" style="margin-bottom: 15px;"></div>
+            
+            <div class="analysis-item">
+                <strong>客群定位：</strong> <span id="segment-result">--</span>
+            </div>
+            <div class="analysis-item">
+                <strong>流失風險：</strong> <span id="risk-result">--</span>
+            </div>
+            
+            <div class="recommendation">
+                <strong>💡 策略建議：</strong><br>
+                <span id="advice-result">--</span>
+            </div>
+        </div>
+
+        <footer>
+            Data Source: Colab Analysis (Group 7)
+        </footer>
+    </div>
+
+    <script>
+        function analyzeCustomer() {
+            // 1. 獲取輸入
+            const age = parseInt(document.getElementById('age').value);
+            const visits = parseInt(document.getElementById('visits').value);
+            const lastVisit = parseInt(document.getElementById('last-visit').value);
+
+            // 簡單驗證
+            if (isNaN(age) || isNaN(visits) || isNaN(lastVisit)) {
+                alert("請輸入完整的數字資料！");
+                return;
+            }
+
+            // 2. 邏輯判斷 (基於 Colab 聚類與決策樹結果)
+            let segment = "";
+            let risk = "";
+            let advice = "";
+            let riskClass = "";
+
+            // 判斷流失風險 (Feature Importance: days_since_last_visit)
+            if (lastVisit > 45) {
+                risk = "高 (High Risk)";
+                riskClass = "tag-risk-high";
+            } else {
+                risk = "低 (Stable)";
+                riskClass = "tag-risk-low";
+            }
+
+            // 判斷客群 (K-Means Clustering Logic: Age & Visits)
+            if (age < 30) {
+                if (visits >= 6) {
+                    segment = "年輕主力 (Young Fanatic)";
+                    advice = "此為策略部重點客群。建議邀請下載 APP 綁定會員，推送「新品買一送一」維持熱度，防止流失。";
+                } else {
+                    segment = "年輕沈睡 (Young Sleeper)";
+                    advice = "到店頻率低。建議使用「學生限定」或「打卡折 10 元」活動，利用社群媒體屬性吸引回流。";
+                }
+            } else {
+                if (visits >= 6) {
+                    segment = "成熟常客 (Mature Loyal)";
+                    advice = "穩定客源。不需過度促銷，建議推薦「經典茶飲」或「儲值優惠」，維持服務品質即可。";
+                } else {
+                    segment = "成熟過路客 (Mature Occasional)";
+                    advice = "可能只是路過購買。建議提供集點卡，增加其重複購買的動機。";
+                }
+            }
+
+            // 特殊補救邏輯
+            if (risk === "高 (High Risk)" && age < 30) {
+                advice = "⚠️ 警報：年輕客群即將流失！請立即發送 APP 推播「回歸好禮」優惠券。";
+            }
+
+            // 3. 顯示結果
+            document.getElementById('segment-result').innerText = segment;
+            document.getElementById('risk-result').innerText = risk;
+            document.getElementById('risk-result').style.color = (riskClass === "tag-risk-high") ? "red" : "green";
+            document.getElementById('advice-result').innerText = advice;
+
+            // 更新標籤
+            const tagsHtml = `
+                <span class="tag tag-strategy">${segment.split(' ')[0]}</span>
+                <span class="tag ${riskClass}">${risk.split(' ')[0]}風險</span>
+            `;
+            document.getElementById('tags-container').innerHTML = tagsHtml;
+
+            // 顯示卡片
+            document.getElementById('result-area').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
